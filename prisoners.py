@@ -15,9 +15,9 @@ class RunMode(Enum):
 
 NUM_PRISONERS = 100
 ALLOWED_DRAWER_OPENS = 50
-SIMULATION_RUNS = 1000000
-NUM_PARALLEL_EXECUTIONS = 12
-RUN_MODE = RunMode.MULTIPROCESSING
+SIMULATION_RUNS = 100000
+NUM_PARALLEL_EXECUTIONS = 100
+RUN_MODE = RunMode.MULTITHREADING
 
 
 class Drawer:
@@ -135,6 +135,25 @@ class Simulator:
         return list(simulation_results)
 
     @classmethod
+    def run_parallel_with_multithreading(
+        cls,
+        number_of_runs: int,
+        number_of_prisoners: int,
+        num_allowed_drawer_opens: int,
+        number_of_threads: int,
+    ):
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=number_of_threads
+        ) as executor:
+            simulation_results = executor.map(
+                cls.simulate_one_run,
+                [number_of_prisoners] * number_of_runs,
+                [num_allowed_drawer_opens] * number_of_runs,
+            )
+
+        return list(simulation_results)
+
+    @classmethod
     def run(
         cls,
         mode: RunMode,
@@ -157,6 +176,13 @@ class Simulator:
                 num_allowed_drawer_opens,
                 num_parallel_executions,
             )
+        elif mode == RunMode.MULTITHREADING:
+            simulation_results = cls.run_parallel_with_multithreading(
+                number_of_runs,
+                number_of_prisoners,
+                num_allowed_drawer_opens,
+                num_parallel_executions,
+            )
         end = time.time()
 
         time_taken = end - start
@@ -171,7 +197,7 @@ class Simulator:
 
 if __name__ == "__main__":
     simulator = Simulator.run(
-        mode=RunMode.MULTIPROCESSING,
+        mode=RUN_MODE,
         number_of_runs=SIMULATION_RUNS,
         number_of_prisoners=NUM_PRISONERS,
         num_allowed_drawer_opens=ALLOWED_DRAWER_OPENS,

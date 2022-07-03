@@ -4,6 +4,7 @@ from copy import deepcopy
 
 NUM_DRAWERS = 100
 ALLOWED_DRAWER_OPENS = 50
+SIMULATION_RUNS = 10000
 
 
 def get_drawers() -> List[int]:
@@ -55,7 +56,7 @@ def free_all_prisoners(drawers_with_numbers):
     return are_all_prisoners_free
 
 
-if __name__ == '__main__':
+def simulate_one_run() -> bool:
     drawers = get_drawers()
     drawers_with_numbers = get_drawers_with_numbers()
     print("Numbers: ", drawers)
@@ -64,6 +65,24 @@ if __name__ == '__main__':
     are_all_prisoners_free = free_all_prisoners(drawers_with_numbers)
     if are_all_prisoners_free:
         print("All prisoners are free! :)")
+        return True
     else:
         print("Not all prisoners managed to escape. Any who was left alive has also been killed. "
               "R.I.P all prisoners :(")
+        return False
+
+
+def simulate_multiple_runs_sequential(num_runs: int):
+
+    simulation_results = []
+
+    for i in range(num_runs):
+        print(f"------------ Run {i+1} ----------------")
+        simulation_results.append(simulate_one_run())
+
+    print(simulation_results)
+    escape_chance = (simulation_results.count(True)/len(simulation_results))*100
+    print(f"Escape chance: {escape_chance}%")
+
+if __name__ == '__main__':
+    simulate_multiple_runs_sequential(SIMULATION_RUNS)

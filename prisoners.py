@@ -1,93 +1,136 @@
+import numbers
 import random
 import time
 from copy import deepcopy
 
 from tqdm import tqdm
 
-NUM_DRAWERS = 100
+NUM_PRISONERS = 100
 ALLOWED_DRAWER_OPENS = 50
-SIMULATION_RUNS = 10000
+SIMULATION_RUNS = 1000
 
 
-def get_drawers() -> list[int]:
-    drawers = list(range(1,NUM_DRAWERS+1))
-    return drawers
+class Drawer:
+
+    def __init__(self, number: int, prisoner_number: int) -> None:
+        self.number = number
+        self.prisoner_number = prisoner_number
+
+    def _get_drawer_numbers(self, number_of_drawers: int) -> list[int]:
+        drawers = list(range(1, number_of_drawers+1))
+        return drawers
+
+    def _get_drawers_with_numbers(self, number_of_drawers: int) -> list[int]:
+        drawers = self._get_drawers(number_of_drawers)
+        drawers_with_numbers = deepcopy(drawers)
+        random.shuffle(drawers_with_numbers)
+        return drawers_with_numbers
+
+    @classmethod
+    def set_all_drawers(cls, number_of_drawers: int) -> list['Drawer']:
+        drawer_numbers = list(range(1, number_of_drawers+1))
+        prisoner_numbers = deepcopy(drawer_numbers)
+        random.shuffle(prisoner_numbers)
+        return [
+            cls(
+                number=drawer_numbers[i], prisoner_number=prisoner_numbers[i]
+            ) for i in range(number_of_drawers)
+        ]
 
 
-def get_drawers_with_numbers() -> list[int]:
-    drawers = get_drawers()
-    drawers_with_numbers = deepcopy(drawers)
-    random.shuffle(drawers_with_numbers)
-    return drawers_with_numbers
+class Prisoner:
 
+    def __init__(self, number) -> None:
+        self.number = number
 
-def try_to_free_prisoner(prisoner_num: int, drawers_with_numbers: int) -> bool:
-    # print(f"Here goes prisoner {prisoner_num} trying to free himself.")
-    opened_drawer_num = prisoner_num
+    def try_to_free(self, drawers: list[Drawer], num_allowed_drawer_opens: int) -> bool:
+         # print(f"Here goes prisoner {prisoner_num} trying to free himself.")
+        opened_drawer_num = self.number
 
-    for i in range(ALLOWED_DRAWER_OPENS):
+        for _ in range(num_allowed_drawer_opens):
+            # print(f"Iteration {i+1}...")
+            # print(f"Opening drawer {opened_drawer_num}...")
+            prisoner_num_in_drawer = drawers[opened_drawer_num-1].prisoner_number
+            # print(f"Prisoner num found in drawer: {prisoner_num_in_drawer}")
 
-        # print(f"Iteration {i+1}...")
-        # print(f"Opening drawer {opened_drawer_num}...")
-        prisoner_num_in_drawer = drawers_with_numbers[opened_drawer_num-1]
-        # print(f"Prisoner num found in drawer: {prisoner_num_in_drawer}")
+            if self.number == prisoner_num_in_drawer:
+                # print(f"Prisoner {prisoner_num} is free!")
+                return True
 
-        if prisoner_num == prisoner_num_in_drawer:
-            # print(f"Prisoner {prisoner_num} is free!")
-            return True
+            opened_drawer_num = prisoner_num_in_drawer
 
-        opened_drawer_num = prisoner_num_in_drawer
-
-    # print(f"{ALLOWED_DRAWER_OPENS} iterations over. "
-    #      f"Prisoner {prisoner_num} couldn't free himself. R.I.P prisoner {prisoner_num} :(")
-    return False
-
-
-def free_all_prisoners(drawers_with_numbers):
-
-    is_prisoner_free = {}
-
-    # number of prisoners = number of drawers
-    for prisoner_num in range(1, NUM_DRAWERS+1):
-        is_prisoner_free[prisoner_num] = try_to_free_prisoner(prisoner_num, drawers_with_numbers)
-        # print()
-
-    # print(is_prisoner_free)
-
-    are_all_prisoners_free = all(is_prisoner_free.values())
-    return are_all_prisoners_free
-
-
-def simulate_one_run() -> bool:
-    drawers = get_drawers()
-    drawers_with_numbers = get_drawers_with_numbers()
-    # print("Numbers: ", drawers)
-    # print("Drawers: ", drawers_with_numbers)
-    # print()
-    are_all_prisoners_free = free_all_prisoners(drawers_with_numbers)
-    if are_all_prisoners_free:
-        # print("All prisoners are free! :)")
-        return True
-    else:
-        # print("Not all prisoners managed to escape. Any who was left alive has also been killed. "
-        #      "R.I.P all prisoners :(")
+        # print(f"{ALLOWED_DRAWER_OPENS} iterations over. "
+        #      f"Prisoner {prisoner_num} couldn't free himself. R.I.P prisoner {prisoner_num} :(")
         return False
 
+    @classmethod
+    def set_all_prisoners(cls, number_of_prisoners: int) -> list['Prisoner']:
+        return [Prisoner(number=x) for x in range(1, number_of_prisoners+1)]
 
-def simulate_multiple_runs_sequential(num_runs: int):
 
-    simulation_results = []
+class Simulator:
 
-    start = time.time()
-    for i in tqdm(range(num_runs)):
-        # print(f"------------ Run {i+1} ----------------")
-        simulation_results.append(simulate_one_run())
-    end = time.time()
+    def __init__(self, number_of_prisoners: int, num_allowed_drawer_opens: int) -> None:
 
-    time_taken = end - start
+        self.drawers = Drawer.set_all_drawers(number_of_drawers=number_of_prisoners)
+        self.prisoners = Prisoner.set_all_prisoners(number_of_prisoners=number_of_prisoners)
+        self.num_allowed_drawer_opens = num_allowed_drawer_opens
 
-    escape_chance = (simulation_results.count(True)/len(simulation_results))*100
-    print(f"Simulations: {num_runs}, Escape chance: {escape_chance: .2f}%, Execution time: {time_taken: .2f} s")
+    def free_all_prisoners(self):
+        is_prisoner_free = {}
+
+        for prisoner in self.prisoners:
+            is_prisoner_free[prisoner.number] = prisoner.try_to_free(
+                self.drawers, self.num_allowed_drawer_opens
+            )
+            # print()
+
+        # print(is_prisoner_free)
+
+        are_all_prisoners_free = all(is_prisoner_free.values())
+        return are_all_prisoners_free
+
+    def simulate_one_run(self) -> bool:
+        are_all_prisoners_free = self.free_all_prisoners()
+        if are_all_prisoners_free:
+            # print("All prisoners are free! :)")
+            return True
+        else:
+            # print("Not all prisoners managed to escape. "
+            #       "Any who was left alive has also been killed. "
+            #       "R.I.P all prisoners :(")
+            return False
+
+    @classmethod
+    def run_sequential(
+        cls,
+        number_of_runs: int,
+        number_of_prisoners: int,
+        num_allowed_drawer_opens: int
+    ):
+        simulation_results = []
+
+        start = time.time()
+        for _ in tqdm(range(number_of_runs)):
+            # print(f"------------ Run {i+1} ----------------")
+            simulator = cls(
+                number_of_prisoners=number_of_prisoners,
+                num_allowed_drawer_opens=num_allowed_drawer_opens
+            )
+            simulation_results.append(simulator.simulate_one_run())
+        end = time.time()
+
+        time_taken = end - start
+
+        escape_chance = (simulation_results.count(True)/len(simulation_results))*100
+        print(f"Simulations: {number_of_runs}, "
+              f"Escape chance: {escape_chance: .2f}%, "
+              f"Execution time: {time_taken: .2f} s")
+
 
 if __name__ == '__main__':
-    simulate_multiple_runs_sequential(SIMULATION_RUNS)
+    simulator = Simulator.run_sequential(
+        number_of_runs=SIMULATION_RUNS,
+        number_of_prisoners=NUM_PRISONERS,
+        num_allowed_drawer_opens=ALLOWED_DRAWER_OPENS
+    )

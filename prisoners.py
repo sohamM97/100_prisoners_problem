@@ -81,7 +81,7 @@ def simulate_multiple_runs_sequential(num_runs: int):
 
     start = time.time()
     for i in tqdm(range(num_runs)):
-        # # print(f"------------ Run {i+1} ----------------")
+        # print(f"------------ Run {i+1} ----------------")
         simulation_results.append(simulate_one_run())
     end = time.time()
 

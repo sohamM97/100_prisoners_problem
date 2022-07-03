@@ -1,7 +1,6 @@
 import random
 import time
 from copy import deepcopy
-from typing import List
 
 from tqdm import tqdm
 
@@ -10,12 +9,12 @@ ALLOWED_DRAWER_OPENS = 50
 SIMULATION_RUNS = 10000
 
 
-def get_drawers() -> List[int]:
+def get_drawers() -> list[int]:
     drawers = list(range(1,NUM_DRAWERS+1))
     return drawers
 
 
-def get_drawers_with_numbers() -> List[int]:
+def get_drawers_with_numbers() -> list[int]:
     drawers = get_drawers()
     drawers_with_numbers = deepcopy(drawers)
     random.shuffle(drawers_with_numbers)

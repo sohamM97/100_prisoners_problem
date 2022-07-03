@@ -16,16 +16,6 @@ class Drawer:
         self.number = number
         self.prisoner_number = prisoner_number
 
-    def _get_drawer_numbers(self, number_of_drawers: int) -> list[int]:
-        drawers = list(range(1, number_of_drawers+1))
-        return drawers
-
-    def _get_drawers_with_numbers(self, number_of_drawers: int) -> list[int]:
-        drawers = self._get_drawers(number_of_drawers)
-        drawers_with_numbers = deepcopy(drawers)
-        random.shuffle(drawers_with_numbers)
-        return drawers_with_numbers
-
     @classmethod
     def set_all_drawers(cls, number_of_drawers: int) -> list['Drawer']:
         drawer_numbers = list(range(1, number_of_drawers+1))
@@ -91,15 +81,7 @@ class Simulator:
         return are_all_prisoners_free
 
     def simulate_one_run(self) -> bool:
-        are_all_prisoners_free = self.free_all_prisoners()
-        if are_all_prisoners_free:
-            # print("All prisoners are free! :)")
-            return True
-        else:
-            # print("Not all prisoners managed to escape. "
-            #       "Any who was left alive has also been killed. "
-            #       "R.I.P all prisoners :(")
-            return False
+        return self.free_all_prisoners()
 
     @classmethod
     def run_sequential(

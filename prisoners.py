@@ -189,7 +189,7 @@ class Simulator:
 
         escape_chance = (simulation_results.count(True) / len(simulation_results)) * 100
         print(
-            f"Simulations: {number_of_runs}, "
+            f"Simulations completed: {len(simulation_results)}, "
             f"Escape chance: {escape_chance: .2f}%, "
             f"Execution time: {time_taken: .4f}s"
         )

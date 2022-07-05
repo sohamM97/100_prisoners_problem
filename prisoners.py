@@ -39,8 +39,9 @@ class Drawer:
 class Prisoner:
     def __init__(self, number) -> None:
         self.number = number
+        self.is_free = False
 
-    def try_to_free(self, drawers: list[Drawer], num_allowed_drawer_opens: int) -> bool:
+    def try_to_free(self, drawers: list[Drawer], num_allowed_drawer_opens: int) -> None:
         # print(f"Here goes prisoner {prisoner_num} trying to free himself.")
         opened_drawer_num = self.number
 
@@ -52,13 +53,13 @@ class Prisoner:
 
             if self.number == prisoner_num_in_drawer:
                 # print(f"Prisoner {prisoner_num} is free!")
-                return True
+                self.is_free = True
+                return
 
             opened_drawer_num = prisoner_num_in_drawer
 
         # print(f"{ALLOWED_DRAWER_OPENS} iterations over. "
         #      f"Prisoner {prisoner_num} couldn't free himself. R.I.P prisoner {prisoner_num} :(")
-        return False
 
     @classmethod
     def set_all_prisoners(cls, number_of_prisoners: int) -> list["Prisoner"]:
@@ -75,17 +76,11 @@ class Simulator:
         self.num_allowed_drawer_opens = num_allowed_drawer_opens
 
     def free_all_prisoners(self):
-        is_prisoner_free = {}
-
         for prisoner in self.prisoners:
-            is_prisoner_free[prisoner.number] = prisoner.try_to_free(
-                self.drawers, self.num_allowed_drawer_opens
-            )
+            prisoner.try_to_free(self.drawers, self.num_allowed_drawer_opens)
             # print()
 
-        # print(is_prisoner_free)
-
-        are_all_prisoners_free = all(is_prisoner_free.values())
+        are_all_prisoners_free = all([prisoner.is_free for prisoner in self.prisoners])
         return are_all_prisoners_free
 
     @classmethod
